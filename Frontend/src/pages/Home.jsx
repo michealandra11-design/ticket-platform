@@ -7,8 +7,8 @@ import {
   Flex,
   Icon,
   Spinner,
-  Link,
 } from "@chakra-ui/react";
+import { Link as RouterLink } from "react-router-dom";
 import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
 import api from "../api/api";
 
@@ -25,8 +25,10 @@ const formatDate = (dateStr) => {
 const EventCard = ({ event }) => {
   const [hovered, setHovered] = useState(false);
   return (
-    <Link
-      href={`/events/${event.id}`}
+    <Box
+      as={RouterLink}
+      to={`/events/${event.id}`}
+      display="block"
       _hover={{ textDecoration: "none" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -65,7 +67,7 @@ const EventCard = ({ event }) => {
           )}
         </Box>
       </Box>
-    </Link>
+    </Box>
   );
 };
 

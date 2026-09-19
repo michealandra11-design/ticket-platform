@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlmodel import Session, select
 from typing import Optional, List
+from datetime import datetime
 from app.database import get_session
 from app.models import Event, TicketType
 from app.config import settings
@@ -15,6 +16,16 @@ def require_admin(x_admin_password: Optional[str] = Header(default=None)):
     if not x_admin_password or x_admin_password != settings.ADMIN_PASSWORD:
         raise HTTPException(status_code=401, detail="Invalid admin passcode")
     return True
+
+
+def _coerce_datetime(value):
+    """SQLite's DateTime column rejects anything that isn't already a
+    Python datetime/date object. Normally FastAPI/Pydantic parses an ISO
+    string into a real datetime before this point, but coerce defensively
+    here too so a raw string can never reach the database layer."""
+    if isinstance(value, str):
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return value
 
 
 @router.post("/admin/login")
@@ -53,6 +64,8 @@ def create_event(
     _: bool = Depends(require_admin),
 ):
     event.id = None
+    event.date = _coerce_datetime(event.date)
+    event.createdAt = datetime.utcnow()
     session.add(event)
     session.commit()
     session.refresh(event)
@@ -69,7 +82,12 @@ def update_event(
     existing = session.get(Event, event_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Event not found")
-    for key, value in event.dict(exclude_unset=True, exclude={"id"}).items():
+    # createdAt is server-managed and never updated by the client; excluding
+    # it here also sidesteps any stale/odd value the client might echo back.
+    data = event.dict(exclude_unset=True, exclude={"id", "createdAt"})
+    if "date" in data:
+        data["date"] = _coerce_datetime(data["date"])
+    for key, value in data.items():
         setattr(existing, key, value)
     session.add(existing)
     session.commit()

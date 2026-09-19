@@ -1,17 +1,18 @@
 import React from "react";
-import { Flex, Box, Link } from "@chakra-ui/react";
+import { Flex, Box } from "@chakra-ui/react";
+import { Link as RouterLink } from "react-router-dom";
 
 const Header = () => {
   return (
     <Flex bg="brand.primary" w="100%" p={3} alignItems="center" justify="space-between">
-      <Link href="/" _hover={{ textDecoration: "none" }}>
+      <Box as={RouterLink} to="/" _hover={{ textDecoration: "none" }}>
         <Box fontWeight="bold" fontSize="2xl" color="brand.secondary">
           ticketplatform
         </Box>
-      </Link>
-      <Link href="/admin" color="brand.secondary" fontSize="sm" opacity={0.85}>
+      </Box>
+      <Box as={RouterLink} to="/admin" color="brand.secondary" fontSize="sm" opacity={0.85}>
         Admin
-      </Link>
+      </Box>
     </Flex>
   );
 };
